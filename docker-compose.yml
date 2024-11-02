@@ -1,0 +1,20 @@
+services:
+    locality_inference:
+        container_name: locality_inference
+        ports:
+            - "8001:8001"
+        env_file:
+            - .env
+        depends_on:
+            - redis
+        networks:
+            - locality_network
+        deploy:
+            resources:
+                limits:
+                    cpus: "1.0"
+                    memory: "512M"
+
+networks:
+    locality_network:
+        external: true
