@@ -4,7 +4,7 @@ from app.config import Config
 class MongoService:
     def __init__(self):
         self.client = MongoClient(Config.MONGO_URI)
-        self.db = self.client["locality"]
+        self.db = self.client[Config.MONGO_DB]
         self.collection = self.db["messages"]
 
     async def load_to_redis(self, redis_service):
