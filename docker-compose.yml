@@ -1,5 +1,6 @@
 services:
     locality_inference:
+        image: locality_inference:latest
         container_name: locality_inference
         build:
             context: .
