@@ -1,20 +1,67 @@
 services:
     locality_inference:
         container_name: locality_inference
+        build:
+            context: .
+            dockerfile: Dockerfile
         ports:
             - "8001:8001"
         env_file:
             - .env
         depends_on:
-            - redis
+            - locality_redis
+            - locality_mongo
         networks:
             - locality_network
         deploy:
             resources:
                 limits:
-                    cpus: "1.0"
-                    memory: "512M"
+                    cpus: "2.0"
+                    memory: "6G"
+    locality_redis:
+        image: redis:latest
+        container_name: locality_redis
+        ports:
+            - "6379:6379"
+        networks:
+            - locality_network
+        deploy:
+            resources:
+                limits:
+                    cpus: "0.5"
+                    memory: "200M"
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        volumes:
+            - mongo_data:/data/db
+
+    locality_mongo:
+        image: mongo:latest
+        container_name: locality_mongo
+        ports:
+            - "27017:27017"
+        networks:
+            - locality_network
+        deploy:
+            resources:
+                limits:
+                    cpus: "0.5"
+                    memory: "256M"
+        healthcheck:
+            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        volumes:
+            - redis_data:/data
 
 networks:
     locality_network:
         external: true
+
+volumes:
+    redis_data:
+    mongo_data:

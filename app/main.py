@@ -1,42 +1,45 @@
-# app/main.py
-from fastapi import FastAPI, HTTPException
-from app.schemas import InferenceRequest, InferenceResponse
-from app.utils import redis_client
-from app.llm.llm_model import llm_model
-import uvicorn
-import logging
-import redis
+from fastapi import FastAPI
+from app.models import InferenceRequest
+from app.services.mongo_service import MongoService
+from app.services.redis_service import RedisService
+from app.utils.inference import get_user_intent, get_store_intent
+from app.utils.logger import log_message
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+app = FastAPI()
 
+mongo_service = MongoService()
+redis_service = RedisService()
 
-app = FastAPI(title="Inference API", version="1.1")
+@app.on_event("startup")
+async def startup_event():
+    await mongo_service.load_to_redis(redis_service)
 
-@app.post("/inference", response_model=InferenceResponse)
-def inference_endpoint(request: InferenceRequest):
-    try:
-        logger.info(f"Received message from {'Store' if request.isStore else 'User'}: {request.message}")
+@app.on_event("shutdown")
+async def shutdown_event():
+    await mongo_service.backup_from_redis(redis_service)
 
-        # Store the incoming message with additional context if needed
-        message_type = "Store" if request.isStore else "User"
-        redis_client.add_message(request.phone, request.message, message_type)
-        
-        # Fetch all previous messages for context
-        messages = redis_client.get_messages(request.phone)
-        
-        # Predict intent and get template name using LLM
-        intent, template_name = llm_model.predict_intent(messages[:-1], messages[-1], request.isStore)
-        
-        return InferenceResponse(intent=intent, template_name=template_name)
-    except redis.RedisError as re:
-        logger.error(f"Redis error: {re}")
-        raise HTTPException(status_code=503, detail="Service Unavailable: Redis Error")
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+@app.post("/inference/user")
+async def inference(request: InferenceRequest):
+    user_id, message = request.user_id, request.message
+    log_message("info", f"Received message from user {user_id}: {message}")
 
-# Optional: For running directly with `python main.py`
-if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    # Retrieve the last 10 messages for context
+    redis_service.add_message(user_id, message)
+
+    # Perform inference
+    intent = get_user_intent([message])
+
+    return {"intent": intent}
+
+@app.post("/inference/store")
+async def inference(request: InferenceRequest):
+    user_id, message = request.user_id, request.message
+    log_message("info", f"Received message from store {user_id}: {message}")
+
+    # Retrieve the last 10 messages for context
+    redis_service.add_message(user_id, message)
+
+    # Perform inference
+    intent = get_store_intent([message])
+
+    return {"intent": intent}

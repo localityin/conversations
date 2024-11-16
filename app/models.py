@@ -1,7 +1,10 @@
-# app/schemas.py
 from pydantic import BaseModel, Field, field_validator
 
 class InferenceRequest(BaseModel):
+    user_id: str
+    message: str
+
+class InferenceRequestV2(BaseModel):
     phone: int = Field(..., example=9987130333)
     message: str = Field(..., example="I want to open an account")
     isStore: bool = Field(..., example=True)
@@ -12,6 +15,6 @@ class InferenceRequest(BaseModel):
             raise ValueError('Phone number must be a 10-digit integer')
         return v
     
-class InferenceResponse(BaseModel):
+class InferenceResponseV2(BaseModel):
     intent: str
     template_name: str

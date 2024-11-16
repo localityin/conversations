@@ -88,3 +88,4 @@ cover/
 coverage.*
 
 .python-version
+*.log
