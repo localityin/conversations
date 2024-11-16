@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    PORT = int(os.getenv("PORT", 8001))
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
     REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
