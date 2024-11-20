@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from app.models import InferenceRequest
 from app.services.mongo_service import MongoService
 from app.services.redis_service import RedisService
-from app.utils.inference import get_intent
+from app.utils.inference import get_intent, faster_get_intent
 from app.utils.logger import log_message
 
 app = FastAPI()
@@ -20,26 +20,26 @@ async def shutdown_event():
 
 @app.post("/inference/user")
 async def inference(request: InferenceRequest):
-    user_id, message = request.user_id, request.message
-    log_message("info", f"Received message from user {user_id}: {message}")
+    user_id, message, fast = request.user_id, request.message, request.fast
+    log_message("info", f"Received message from user {user_id}: {message}. Fast: {fast}")
 
     # Retrieve the last 10 messages for context
     redis_service.add_message(user_id, message)
 
     # Perform inference
-    intent = get_intent(False, [message])
+    intent = faster_get_intent(False, [message]) if fast else get_intent(False, [message])
 
     return {"intent": intent}
 
 @app.post("/inference/store")
 async def inference(request: InferenceRequest):
-    user_id, message = request.user_id, request.message
-    log_message("info", f"Received message from store {user_id}: {message}")
+    user_id, message, fast = request.user_id, request.message, request.fast
+    log_message("info", f"Received message from store {user_id}: {message}. Fast: {fast}")
 
     # Retrieve the last 10 messages for context
     redis_service.add_message(user_id, message)
 
     # Perform inference
-    intent = get_intent(True, [message])
+    intent = faster_get_intent(True, [message]) if fast else get_intent(True, [message])
 
     return {"intent": intent}

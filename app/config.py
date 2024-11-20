@@ -15,4 +15,6 @@ class Config:
     REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 
     MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-1b-Instruct")
+    SMALL_MODEL_NAME = os.getenv("SMALL_MODEL_NAME", "facebook/bart-large-mnli")
+    
     HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN", "")

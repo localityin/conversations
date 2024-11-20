@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 class InferenceRequest(BaseModel):
     user_id: str
     message: str
+    fast: bool = False
 
 class InferenceRequestV2(BaseModel):
     phone: int = Field(..., example=9987130333)

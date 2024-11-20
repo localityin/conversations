@@ -44,6 +44,19 @@ user_known_intents = {
     'user_no_order'
 }
 
+user_intent_descriptions = {
+    'user_welcome_onboarding': "User wants to begin or set up an account.",
+    'user_delivery_location': "User asks to specify or provide a delivery location.",
+    'user_order_init': "User wants to start an order, browse menu options, or intends to order anything.",
+    'user_confirm_cart': "User wants to review or confirm items in their cart or wants to add something to the cart.",
+    'user_order_delivery_estimate': "User inquires about the delivery time or asks if the order is on its way.",
+    'user_rate_order': "User wants to rate an order, usually after delivery.",
+    'user_cart_discarded': "User wants to discard or delete the cart contents.",
+    'user_order_status': "User wants to check the status or track an active order.",
+    'user_unknown_message': "User’s message does not match any listed intent.",
+    'user_no_order': "User inquires about order status but has no recent orders."
+}
+
 STORE_SYSTEM_PROMPT = """
 Your task is to identify and respond with only the most relevant intent identifier from the list below based on the store's message.
 You will be sent a message like a store is chatting with you. You need to respond back with what the intent behind the store's message is based on the following rules.
@@ -86,4 +99,15 @@ store_known_intents = {
     'store_location_onboarding', 'store_onboarding_complete', 
     'store_order_request', 'store_unknown_message', 
     'store_daily_revenue', 'store_toggle_status'
+}
+
+store_intent_descriptions = {
+    'store_welcome_onboarding': "Store wants to begin or set up an account by providing its name and phone number.",
+    'store_gstin_onboarding': "Store provides or is asked to provide its GSTIN number for verification.",
+    'store_location_onboarding': "Store provides or is asked to provide its location.",
+    'store_onboarding_complete': "Store’s onboarding is completed, and the store is notified with a link to set up its inventory.",
+    'store_order_request': "Store receives an order with details like items and total amount, and can choose to accept or decline the order.",
+    'store_unknown_message': "Store sends a message that does not match any listed intent, and is provided options to manage inventory, view revenue, or mark the store as closed for the day.",
+    'store_daily_revenue': "Store requests or is shown the revenue generated for the day, along with the store's name.",
+    'store_toggle_status': "Store attempts to interact but is currently marked as closed, and is prompted to reopen the store."
 }
