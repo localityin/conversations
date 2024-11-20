@@ -2,26 +2,29 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from app.config import Config
 from app.utils.logger import log_message
-from app.constants.system_prompts import USER_SYSTEM_PROMPT, user_known_intents
+from app.constants.system_prompts import USER_SYSTEM_PROMPT, STORE_SYSTEM_PROMPT, user_known_intents, store_known_intents
 
+log_message("info", "Loading model and tokenizer...")
 device = "cuda" if torch.cuda.is_available() else "cpu"
-tokenizer = AutoTokenizer.from_pretrained(Config.MODEL_NAME, use_auth_token=Config.HUGGINGFACE_TOKEN)
-model = AutoModelForCausalLM.from_pretrained(Config.MODEL_NAME, use_auth_token=Config.HUGGINGFACE_TOKEN)
+tokenizer = AutoTokenizer.from_pretrained(Config.MODEL_NAME, token=Config.HUGGINGFACE_TOKEN)
+model = AutoModelForCausalLM.from_pretrained(Config.MODEL_NAME, token=Config.HUGGINGFACE_TOKEN)
 model.to(device)
+log_message("info", "Model and tokenizer loaded successfully")
 
-def filter_user_intent(message: str) -> str:
-    for intent in user_known_intents:
+def filter_intent(is_store, message: str) -> str:
+    intents = store_known_intents if is_store else user_known_intents
+    for intent in intents:
         if intent in message:
             return intent
-    return 'user_unknown_message'
+    return 'user_unknown_message' if not is_store else 'store_unknown_message'
 
-def filter_store_intent(message: str) -> str:
-    return 'store_unknown_message'
-
-def get_user_intent(messages: list) -> str:
+def get_intent(is_store, messages: list) -> str:
     # Refine context construction
-    context = USER_SYSTEM_PROMPT + f"\nUser: {messages[0]}\nResponse: "
-    log_message("info", f"User message: {messages[0]}")
+    actor = 'Store' if is_store else 'User'
+    prompt = STORE_SYSTEM_PROMPT if is_store else USER_SYSTEM_PROMPT
+
+    context = prompt + f"\n{actor}: {messages[0]}\nResponse: "
+    log_message("info", f"{actor} message: {messages[0]}")
     log_message("debug", f"Context passed to model: {context}")
     
     # Tokenize and generate response
@@ -39,11 +42,7 @@ def get_user_intent(messages: list) -> str:
 
     # Extract and filter the intent
     intent = response.split("\n")[-1].strip()  # Take the last line
-    intent = filter_user_intent(intent)  # Validate against known intents
+    intent = filter_intent(is_store, intent)  # Validate against known intents
 
     log_message("info", f"Extracted intent: {intent}")
-    return intent
-
-def get_store_intent(messages: list) -> str:
-    intent = filter_store_intent(messages[0])
     return intent

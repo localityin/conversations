@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from app.models import InferenceRequest
 from app.services.mongo_service import MongoService
 from app.services.redis_service import RedisService
-from app.utils.inference import get_user_intent, get_store_intent
+from app.utils.inference import get_intent
 from app.utils.logger import log_message
 
 app = FastAPI()
@@ -27,7 +27,7 @@ async def inference(request: InferenceRequest):
     redis_service.add_message(user_id, message)
 
     # Perform inference
-    intent = get_user_intent([message])
+    intent = get_intent(False, [message])
 
     return {"intent": intent}
 
@@ -40,6 +40,6 @@ async def inference(request: InferenceRequest):
     redis_service.add_message(user_id, message)
 
     # Perform inference
-    intent = get_store_intent([message])
+    intent = get_intent(True, [message])
 
     return {"intent": intent}

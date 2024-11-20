@@ -7,11 +7,10 @@ services:
             dockerfile: Dockerfile
         ports:
             - "${PORT}:${PORT}"
+        profiles:
+            - inference_services
         env_file:
             - .env
-        depends_on:
-            - locality_redis
-            - locality_mongo
         networks:
             - locality_network
         deploy:
@@ -19,11 +18,19 @@ services:
                 limits:
                     cpus: "2.0"
                     memory: "6G"
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10m"
+                max-file: "3"
+
     locality_redis:
         image: redis:latest
         container_name: locality_redis
         ports:
             - "6379:6379"
+        profiles:
+            - locality_assets
         networks:
             - locality_network
         deploy:
@@ -32,32 +39,16 @@ services:
                     cpus: "0.5"
                     memory: "200M"
         healthcheck:
-            test: ["CMD", "redis-cli", "ping"]
+            test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
             interval: 10s
             timeout: 5s
             retries: 5
         volumes:
-            - mongo_data:/data/db
-
-    locality_mongo:
-        image: mongo:latest
-        container_name: locality_mongo
-        ports:
-            - "27017:27017"
-        networks:
-            - locality_network
-        deploy:
-            resources:
-                limits:
-                    cpus: "0.5"
-                    memory: "256M"
-        healthcheck:
-            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-        volumes:
-            - redis_data:/data
+            - redis_data:/data/db
+            - ./redis-entrypoint.sh:/usr/local/bin/redis-entrypoint.sh
+        env_file:
+            - .env
+        command: ["bash", "/usr/local/bin/redis-entrypoint.sh"]
 
 networks:
     locality_network:
@@ -65,4 +56,3 @@ networks:
 
 volumes:
     redis_data:
-    mongo_data:
