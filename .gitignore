@@ -89,3 +89,6 @@ coverage.*
 
 .python-version
 *.log
+
+
+*.gguf
